@@ -1,0 +1,8 @@
+beautifulsoup4==4.12.3
+feedparser==6.0.11
+gspread==6.1.2
+google-auth==2.34.0
+pandas==2.2.2
+python-dateutil==2.9.0.post0
+requests==2.32.3
+geopy==2.4.1

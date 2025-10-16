@@ -1,0 +1,22 @@
+name: Fetch NJ Bids
+on:
+  schedule:
+    - cron: "0 10 * * *"   # 10:00 UTC daily (~6:00 AM ET); adjust if desired
+  workflow_dispatch: {}
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Write Google Service Account key
+        run: echo '${{ secrets.GOOGLE_SA_JSON }}' > service_account.json
+      - name: Fetch DPMC
+        run: python fetch_dpmc.py
+      - name: Fetch NJDOT
+        run: python fetch_njdot.py
+      - name: Fetch NJTA
+        run: python fetch_njta.py

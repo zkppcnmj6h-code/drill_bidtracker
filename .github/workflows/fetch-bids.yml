@@ -13,7 +13,17 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: Write Google Service Account key
-        run: echo '${{ secrets.GOOGLE_SA_JSON }}' > service_account.json
+        run: |
+          cat > service_account.json <<'JSON'
+          ${{ secrets.GOOGLE_SA_JSON }}
+          JSON
+      - name: Validate SA JSON
+        run: |
+          python - <<'PY'
+          import json
+          data = json.load(open('service_account.json'))
+          print("✅ JSON loaded successfully for:", data["client_email"])
+          PY
       - name: Fetch DPMC
         run: python fetch_dpmc.py
       - name: Fetch NJDOT

@@ -1,23 +1,52 @@
-- name: Write Google Service Account key
-  run: |
-    cat > service_account.json <<'JSON'
-    ${{ secrets.GOOGLE_SA_JSON }}
-    JSON
+name: Fetch NJ Bids
+on:
+  schedule:
+    - cron: "0 10 * * *"   # 10:00 UTC daily (~6:00 AM ET); adjust if desired
+  workflow_dispatch: {}
 
-- name: Inspect key (size & first-char only)
-  run: |
-    python - <<'PY'
-    import os,sys
-    p='service_account.json'
-    if not os.path.exists(p):
-        print('❌ service_account.json not found'); sys.exit(2)
-    data=open(p,'rb').read()
-    print('Key file bytes:', len(data))
-    if not data:
-        print('❌ Key file is empty'); sys.exit(3)
-    first = chr(data[0])
-    print('First character:', first)
-    if first != '{':
-        print('❌ Key does not start with "{"'); sys.exit(4)
-    print('✅ Shape looks good')
-    PY
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Write the Google Service Account key from the secret GOOGLE_SA_JSON
+      - name: Write Google Service Account key
+        run: |
+          cat > service_account.json <<'JSON'
+          ${{ secrets.GOOGLE_SA_JSON }}
+          JSON
+
+      # Sanity-check the key without exposing secrets
+      - name: Validate SA JSON
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          p = 'service_account.json'
+          if not os.path.exists(p):
+              print('❌ service_account.json not found'); sys.exit(2)
+          data = open(p, 'rb').read()
+          print('Key file bytes:', len(data))
+          if not data:
+              print('❌ Key file is empty'); sys.exit(3)
+          if data[:1] != b'{':
+              print('❌ Key does not start with "{"'); sys.exit(4)
+          j = json.loads(data.decode())
+          print('✅ JSON loaded successfully for:', j.get('client_email'))
+          PY
+
+      - name: Fetch DPMC
+        run: python fetch_dpmc.py
+
+      - name: Fetch NJDOT
+        run: python fetch_njdot.py
+
+      - name: Fetch NJTA
+        run: python fetch_njta.py

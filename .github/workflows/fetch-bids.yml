@@ -18,11 +18,9 @@ jobs:
         run: pip install -r requirements.txt
 
       # Write the Google Service Account key from the secret GOOGLE_SA_JSON
-      - name: Write Google Service Account key
+      - name: Write Google Service Account key (base64)
         run: |
-          cat > service_account.json <<'JSON'
-          ${{ secrets.GOOGLE_SA_JSON }}
-          JSON
+          echo "${{ secrets.GOOGLE_SA_JSON_B64 }}" | base64 -d > service_account.json
 
       # Sanity-check the key without exposing secrets
       - name: Validate SA JSON

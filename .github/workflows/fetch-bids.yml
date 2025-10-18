@@ -1,0 +1,54 @@
+name: Fetch NJ Bids
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * *"   # 10:00 UTC daily (~6:00 AM ET)
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # 1️⃣ Decode the Google Service Account key from secret
+      - name: Write Google Service Account key (base64 via OpenSSL)
+        run: |
+          echo "${{ secrets.GOOGLE_SA_JSON_B64 }}" | openssl base64 -A -d -out service_account.json
+
+      # 2️⃣ Validate the JSON structure
+      - name: Validate SA JSON
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          p = 'service_account.json'
+          if not os.path.exists(p):
+              print('❌ service_account.json missing'); sys.exit(2)
+          data = open(p, 'rb').read()
+          print(f'Key file bytes: {len(data)}')
+          if not data:
+              print('❌ File empty'); sys.exit(3)
+          if data[:1] != b'{':
+              print('❌ Key does not start with "{"'); sys.exit(4)
+          try:
+              j = json.loads(data.decode())
+          except Exception as e:
+              print('❌ JSON parse error:', e); sys.exit(5)
+          print('✅ JSON loaded successfully for:', j.get('client_email'))
+          PY
+
+      # 3️⃣ Example placeholder: your Python bid scrapers
+      - name: Fetch DPMC
+        run: python fetch_dpmc.py
+
+      - name: Fetch NJTA
+        run: python fetch_njta.py
+
+      # (Optional) add other sources here

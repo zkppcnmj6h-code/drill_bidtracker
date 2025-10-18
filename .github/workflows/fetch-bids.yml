@@ -2,6 +2,7 @@
   run: python fetch_njta.py
   continue-on-error: true
 
+name: Fetch NJ Bids
 on:
   workflow_dispatch:
   schedule:

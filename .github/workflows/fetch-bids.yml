@@ -1,4 +1,6 @@
-name: Fetch NJ Bids
+- name: Fetch NJTA
+  run: python fetch_njta.py
+  continue-on-error: true
 
 on:
   workflow_dispatch:

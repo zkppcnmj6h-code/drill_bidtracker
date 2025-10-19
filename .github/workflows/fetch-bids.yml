@@ -7,22 +7,26 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
+      # 🧱 1. Checkout code
       - uses: actions/checkout@v4
 
+      # 🐍 2. Setup Python
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # 📦 3. Install dependencies
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # 1️⃣ Decode the Google Service Account key from secret
+      # 🔑 4. Decode the Google Service Account key
       - name: Write Google Service Account key (base64 via OpenSSL)
         run: |
           echo "${{ secrets.GOOGLE_SA_JSON_B64 }}" | openssl base64 -A -d -out service_account.json
 
-      # 2️⃣ Validate the JSON structure
+      # 🧮 5. Validate the key
       - name: Validate SA JSON
         run: |
           python - <<'PY'
@@ -43,21 +47,39 @@ jobs:
           print('✅ JSON loaded successfully for:', j.get('client_email'))
           PY
 
+      # 🗂️ 6. Show repository tree (diagnostic)
       - name: Show repo tree
         run: |
+          echo "📁 Current working directory:"
           pwd
-          ls -la
-          find . -maxdepth 3 \( -name "fetch_*.py" -o -name "utils_common.py" -o -name "requirements.txt" \)
+          echo
+          echo "📄 Listing files up to depth 3:"
+          find . -maxdepth 3 \( -name "fetch_*.py" -o -name "utils_common.py" -o -name "requirements.txt" \) | sort
 
-      # 3️⃣ Your Python bid scrapers
+      # 🧩 7. Run each scraper (resilient)
       - name: Fetch DPMC
-        run: python fetch_dpmc.py
+        run: |
+          if [ -f fetch_dpmc.py ]; then
+            python fetch_dpmc.py
+          else
+            echo "⚠️ fetch_dpmc.py not found; skipping."
+          fi
         continue-on-error: true
 
       - name: Fetch NJDOT
-        run: python fetch_njdot.py
+        run: |
+          if [ -f fetch_njdot.py ]; then
+            python fetch_njdot.py
+          else
+            echo "⚠️ fetch_njdot.py not found; skipping."
+          fi
         continue-on-error: true
 
       - name: Fetch NJTA
-        run: python fetch_njta.py
+        run: |
+          if [ -f fetch_njta.py ]; then
+            python fetch_njta.py
+          else
+            echo "⚠️ fetch_njta.py not found; skipping."
+          fi
         continue-on-error: true

@@ -43,12 +43,20 @@ jobs:
           print('✅ JSON loaded successfully for:', j.get('client_email'))
           PY
 
+      - name: Show repo tree
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 3 \( -name "fetch_*.py" -o -name "utils_common.py" -o -name "requirements.txt" \)
+
       # 3️⃣ Your Python bid scrapers
       - name: Fetch DPMC
         run: python fetch_dpmc.py
+        continue-on-error: true
 
       - name: Fetch NJDOT
         run: python fetch_njdot.py
+        continue-on-error: true
 
       - name: Fetch NJTA
         run: python fetch_njta.py

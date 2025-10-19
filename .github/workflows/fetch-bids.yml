@@ -1,7 +1,3 @@
-- name: Fetch NJTA
-  run: python fetch_njta.py
-  continue-on-error: true
-
 name: Fetch NJ Bids
 on:
   workflow_dispatch:
@@ -47,11 +43,13 @@ jobs:
           print('✅ JSON loaded successfully for:', j.get('client_email'))
           PY
 
-      # 3️⃣ Example placeholder: your Python bid scrapers
+      # 3️⃣ Your Python bid scrapers
       - name: Fetch DPMC
         run: python fetch_dpmc.py
 
+      - name: Fetch NJDOT
+        run: python fetch_njdot.py
+
       - name: Fetch NJTA
         run: python fetch_njta.py
-
-      # (Optional) add other sources here
+        continue-on-error: true
